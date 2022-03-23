@@ -51,6 +51,7 @@ uint32_t indicator_colors[16] = {
   indicatorColor8, indicatorColor9, indicatorColor10, indicatorColor11,
   indicatorColor12, indicatorColor13, indicatorColor14, indicatorColor15
 };
+
 struct Color {
   uint8 red;
   uint8 green;
@@ -70,8 +71,7 @@ void setup() {
   //  }
 
   setupAaveColors();
-  indicator.begin();
-  indicator.setBrightness(30);
+  setupIndicatorColors();
   indicatorDisplay(16);
 }
 
@@ -86,9 +86,13 @@ void indicatorDisplay(int pixels) {
   indicator.show();
 }
 
+void setupIndicatorColors() {
+  indicator.begin();
+  indicator.setBrightness(10);
+}
 void setupAaveColors() {
   pixels.begin();
-  pixels.setBrightness(30);
+  pixels.setBrightness(80);
   pixels.setPixelColor(0, colors[0]);
   pixels.setPixelColor(1, colors[1]);
   pixels.setPixelColor(2, colors[2]);
@@ -171,11 +175,17 @@ uint8 findNextColor(uint8 curr, uint8 dest, uint8 divider) {
 }
 
 void changeDestinationColors() {
-  colors[6] = colors[0];
-  colors[0] = colors[1];
-  colors[1] = colors[2];
-  colors[2] = colors[3];
-  colors[3] = colors[4];
-  colors[4] = colors[5];
-  colors[5] = colors[6];
+  colors[0] = colors[6];
+  colors[6] = colors[5];
+  colors[5] = colors[4];
+  colors[4] = colors[3];
+  colors[3] = colors[2];
+  colors[2] = colors[1];
+  colors[1] = colors[0];
+  
+  
+  
+  
+  
+  
 }
