@@ -81,7 +81,7 @@ void setup() {
 
   setupAaveColors();
   setupIndicatorColors();
-  //indicatorDisplay(12);
+  indicatorDisplay(16);
 }
 
 void loop() {
@@ -131,16 +131,19 @@ void loop() {
             // CSS to style the on/off buttons
             // Feel free to change the background-color and font-size attributes to fit your preferences
             client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background-color: #195B6A; border: none; color: white; padding: 16px 40px;");
-            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
             // drop down
-            client.println(".dropbtn {background-color: #04AA6D; min-width: 160px; color: white; padding: 16px; font-size: 16px; border: none; }");
+            client.println(".dropbtn {background-color: #04AA6D; min-width: 400px; color: white; padding: 16px; font-size: 20px; border: none; }");
             client.println(".dropdown { position: relative; display: inline-block; }");
-            client.println(".dropdown-content { display: none; position: absolute; background-color: #f1f1f1; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; }");
+            client.println(".dropdown-content { display: none; position: absolute; background-color: #f1f1f1; min-width: 400px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; }");
             client.println(".dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }");
             client.println(".dropdown-content a:hover {background-color: #ddd;}");
             client.println(".dropdown:hover .dropdown-content {display: block;}");
             client.println(".dropdown:hover .dropbtn {background-color: #3e8e41;}");
+            // input text
+            client.println("input[type=text] {   width: 400px;   padding: 12px 20px;   margin: 8px 0;   box-sizing: border-box;   border: 2px solid black;   border-radius: 4px; }");
+            // button
+            client.println(".button { background-color: #195B6A; width: 400px; border: none; color: white; padding: 16px 40px;");
+            client.println("text-decoration: none; font-size: 22px; margin: 2px; cursor: pointer;}");
             client.println("</style></head>");
             
             // Web Page Heading
@@ -148,15 +151,11 @@ void loop() {
             
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + chain + "</button> <div class=\"dropdown-content\">");
             client.println("<a href=\"#\">Avalanche</a> <a href=\"#\">Polygon</a> <a href=\"#\">Ethereum</a> </div> </div>");
-           
-            // Display current state, and ON/OFF buttons for GPIO 4
-            //client.println("<p>red - State " + redstate + "</p>");
-            // If the red LED is off, it displays the ON button
-            if ("" == "off") {
-              client.println("<p><a href=\"/red/on\"><button class=\"button\">ON</button></a></p>");
-            } else {
-              client.println("<p><a href=\"/red/off\"><button class=\"button button2\">OFF</button></a></p>");
-            }
+
+            client.println("<p><input type=\"text\" id=\"address\" name=\"address\"></p>");
+ 
+            client.println("<p><a href=\"/red/off\"><button class=\"button button2\">SUBMIT</button></a></p>");
+            
 
             client.println("</body></html>");
             // The HTTP response ends with another blank line
@@ -190,11 +189,11 @@ void indicatorDisplay(int pixels) {
 
 void setupIndicatorColors() {
   indicator.begin();
-  indicator.setBrightness(10);
+  indicator.setBrightness(15);
 }
 void setupAaveColors() {
   pixels.begin();
-  pixels.setBrightness(80);
+  pixels.setBrightness(100);
   pixels.setPixelColor(0, colors[0]);
   pixels.setPixelColor(1, colors[1]);
   pixels.setPixelColor(2, colors[2]);
