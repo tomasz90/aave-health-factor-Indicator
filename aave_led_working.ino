@@ -2,6 +2,10 @@
 #include <Adafruit_NeoPixel.h>
 #include <bitset>
 #include <EEPROM.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
+#include <WiFiClient.h>
+#include <ArduinoJson.h>
 
 const char* ssid = "***REMOVED***";
 const char* password = "***REMOVED***";
@@ -81,6 +85,8 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+
+  getHf();
 
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
@@ -186,6 +192,34 @@ void loop() {
   }
 }
 
+void getHf() {
+
+    if(WiFi.status()== WL_CONNECTED){
+      String serverPath = "https://api.avax.network/ext/bc/C/rpc";
+       std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+      client->setInsecure();
+      // Your Domain name with URL path or IP address with path
+      HTTPClient https;
+      https.begin(*client, serverPath);
+      
+      https.addHeader("Content-Type", "application/json");
+      int httpResponseCode = https.POST("{\"method\":\"eth_call\",\"params\":[{\"to\":\"0x73e4898a1bfa9f710b6a6ab516403a6299e01fc6\",\"data\":\"0x02405343000000000000000000000000b6a86025f0fe1862b372cb0ca18ce3ede02a318f0000000000000000000000006cf0b3e6092a268b6c6e3dc681cec61a7733a52e\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}");
+      
+      if (httpResponseCode > 0) {
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+        String payload = https.getString();
+        Serial.println(payload);
+      }
+      else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+      }
+      // Free resources
+      https.end();
+  }
+}
+
 void updateChain(char* chain) {
   for (int i = 0; i < sizeof(settings.chain); i++) {
     settings.chain[i] = chain[i];
@@ -213,6 +247,7 @@ void setupIndicatorColors() {
   indicator.begin();
   indicator.setBrightness(15);
 }
+
 void setupAaveColors() {
   pixels.begin();
   pixels.setBrightness(100);
