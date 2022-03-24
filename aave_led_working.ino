@@ -50,7 +50,7 @@ uint32_t indicatorColor13 = indicator.Color(110, 150, 5);
 uint32_t indicatorColor14 = indicator.Color(100, 160, 10);
 uint32_t indicatorColor15 = indicator.Color(90, 170, 15);
 
-uint32_t indicatorColor-1 = indicator.Color(0, 0, 0);
+uint32_t indicatorColorX = indicator.Color(0, 0, 0);
 
 uint32_t indicator_colors[16] = {
   indicatorColor0, indicatorColor1, indicatorColor2, indicatorColor3,
@@ -80,7 +80,7 @@ String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
 String ethereumPool = "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9";
 
 unsigned long previousMillis = 0;
-const long interval = 3000;
+const long interval = 30000;
 
 void setup() {
 
@@ -205,8 +205,6 @@ void loop() {
     previousMillis = currentMillis;
     float hf = getHf(avaxRpc, avaxPool, settings.address);
     indicatorDisplay(hf);
-    Serial.println("HF IS : ");
-    Serial.println(hf);
   }
 }
 
@@ -263,17 +261,45 @@ void updateAddress(char* address) {
 }
 
 void indicatorDisplay(float hf) {
-  int pixels = (hf - 1.5) / 0.1;
-  if (pixels > 0) {
-    for (int i = 0; i < INDICATOR_NUMPIXELS; i++) {
-      if(pixels >= i) {
+  int pixels = (hf - 1.5) / 0.09;
+  if(pixels > INDICATOR_NUMPIXELS) {
+    pixels = INDICATOR_NUMPIXELS;
+  }
+  int firstBlack = 0;
+
+  while(indicator.getPixelColor(firstBlack) != 0) {
+    firstBlack++;
+  }
+
+  if (pixels >= 0) {
+    if (firstBlack <= pixels) {
+      for (int i = firstBlack; i <= pixels ; i++) {
         indicator.setPixelColor(i, indicator_colors[i]);
-      } else {
-        indicator.setPixelColor(i, indicatorColor - 1);
+        indicator.show();
+        delay(200);
+      }
+    } else if(firstBlack > pixels){
+      for (int i = firstBlack; i > pixels; i--) {
+        indicator.setPixelColor(i, indicatorColorX);
+        indicator.show();
+        delay(200);
       }
     }
+  } else { // replace with xtask, add buzzer
+    for(int i = 0; i < 10; i++) {
+    setAllPixels(indicatorColor0);
+    delay(300);
+    setAllPixels(indicatorColorX);
+    delay(300);
+    }
   }
-  indicator.show();
+}
+
+void setAllPixels(int color) {
+  for (int i = 0; i < INDICATOR_NUMPIXELS; i++) {
+        indicator.setPixelColor(i, color);
+      }
+      indicator.show();
 }
 
 void setupIndicatorColors() {
