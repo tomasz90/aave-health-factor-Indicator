@@ -74,13 +74,12 @@ Settings settings;
 
 String avaxRpc = "https://api.avax.network/ext/bc/C/rpc";
 String polygonRpc = "https://polygon-rpc.com/";
-String ethereumRpc = "https://mainnet.infura.io/v3/";
+
 String avaxPool = "0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c";
 String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
-String ethereumPool = "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9";
 
 unsigned long previousMillis = 0;
-const long interval = 30000;
+const long interval = 10000;
 
 void setup() {
 
@@ -169,9 +168,9 @@ void loop() {
             client.println("<body><h1>AAVE indicator</h1>");
             // drop down menu
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + String(settings.chain) + "</button> <div class=\"dropdown-content\">");
-            client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> <a href=\"Ethereum\">Ethereum</a> </div> </div>");
+            client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> </div> </div>");
             // input and submit form
-            client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=" + String(settings.address) + ">");
+            client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=0x" + String(settings.address) + ">");
             client.println("<p><input type=\"submit\" class=\"button\" value=\"Submit\"> </p> </form>");
             // script to enter address
             client.println("<script> $(\"#addressForm\").submit(function(event) { event.preventDefault();");
@@ -203,8 +202,17 @@ void loop() {
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-    float hf = getHf(avaxRpc, avaxPool, settings.address);
+    float hf;
+    if (strcmp(settings.chain, "Avalanche") == 0) {
+      hf = getHf(avaxRpc, avaxPool, settings.address);
+    } else if (strcmp(settings.chain, "Polygon") == 0) {
+      hf = getHf(polygonRpc, polygonPool, settings.address);
+    }
+    
     indicatorDisplay(hf);
+    Serial.println(hf);
+    Serial.println(settings.address);
+    Serial.println(settings.chain);
   }
 }
 
@@ -262,23 +270,24 @@ void updateAddress(char* address) {
 
 void indicatorDisplay(float hf) {
   int pixels = (hf - 1.5) / 0.09;
-  if(pixels > INDICATOR_NUMPIXELS) {
-    pixels = INDICATOR_NUMPIXELS;
-  }
   int firstBlack = 0;
 
-  while(indicator.getPixelColor(firstBlack) != 0) {
+  while (indicator.getPixelColor(firstBlack) != 0) {
     firstBlack++;
   }
-
+  Serial.println(pixels);
   if (pixels >= 0) {
     if (firstBlack <= pixels) {
-      for (int i = firstBlack; i <= pixels ; i++) {
-        indicator.setPixelColor(i, indicator_colors[i]);
-        indicator.show();
-        delay(200);
+      if (pixels < 38) { // 38 -> hf = 5
+        for (int i = 0; i <= pixels || i < INDICATOR_NUMPIXELS; i++) {
+          indicator.setPixelColor(i, indicator_colors[i]);
+          indicator.show();
+          delay(200);
+        }
+      } else {
+        setAllPixels(indicatorColor15);
       }
-    } else if(firstBlack > pixels){
+    } else if (firstBlack > pixels) {
       for (int i = firstBlack; i > pixels; i--) {
         indicator.setPixelColor(i, indicatorColorX);
         indicator.show();
@@ -286,20 +295,20 @@ void indicatorDisplay(float hf) {
       }
     }
   } else { // replace with xtask, add buzzer
-    for(int i = 0; i < 10; i++) {
-    setAllPixels(indicatorColor0);
-    delay(300);
-    setAllPixels(indicatorColorX);
-    delay(300);
+    for (int i = 0; i < 10; i++) {
+      setAllPixels(indicatorColor0);
+      delay(300);
+      setAllPixels(indicatorColorX);
+      delay(300);
     }
   }
 }
 
 void setAllPixels(int color) {
   for (int i = 0; i < INDICATOR_NUMPIXELS; i++) {
-        indicator.setPixelColor(i, color);
-      }
-      indicator.show();
+    indicator.setPixelColor(i, color);
+  }
+  indicator.show();
 }
 
 void setupIndicatorColors() {
