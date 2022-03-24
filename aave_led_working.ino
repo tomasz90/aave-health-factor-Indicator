@@ -9,6 +9,7 @@ WiFiServer server(80);
 
 String header;
 String chain = "Avalanche";
+String address = "";
 
 #define AAVE_PIN 4
 #define AAVE_NUMPIXELS 7
@@ -106,24 +107,14 @@ void loop() {
             client.println("Connection: close");
             client.println();
             // turns the GPIOs on and off
-            if (header.indexOf("GET /green/on") >= 0) {
-              Serial.println("green on");
-              //greenstate = "on";
-              //digitalWrite(greenled, HIGH);
-            } else if (header.indexOf("GET /green/off") >= 0) {
-              Serial.println("green off");
-              //greenstate = "off";
-              //digitalWrite(greenled, LOW);
-            } else if (header.indexOf("GET /red/on") >= 0) {
-              Serial.println("red on");
-              //redstate = "on";
-              //digitalWrite(redled, HIGH);
-            } else if (header.indexOf("GET /red/off") >= 0) {
-              Serial.println("red off");
-              //redstate = "off";
-              //digitalWrite(redled, LOW);
+            if (header.indexOf("GET /Avalanche") >= 0) {
+              chain = "Avalanche";
+            } else if (header.indexOf("GET /Polygon") >= 0) {
+              chain = "Polygon";
+            } else if (header.indexOf("GET /Ethereum") >= 0) {
+              chain = "Ethereum";
             }
-
+            
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -150,13 +141,11 @@ void loop() {
             client.println("<body><h1>AAVE indicator</h1>");
             
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + chain + "</button> <div class=\"dropdown-content\">");
-            client.println("<a href=\"#\">Avalanche</a> <a href=\"#\">Polygon</a> <a href=\"#\">Ethereum</a> </div> </div>");
+            client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> <a href=\"Ethereum\">Ethereum</a> </div> </div>");
 
-            client.println("<p><input type=\"text\" id=\"address\" name=\"address\"></p>");
- 
-            client.println("<p><a href=\"/red/off\"><button class=\"button button2\">SUBMIT</button></a></p>");
-            
-
+            client.println("<form action=\"/\" id=\"searchForm\"> <input type=\"text\" name=\"s\" placeholder=\"Address...\">");
+            client.println("<p><input type=\"submit\" class=\"button\" value=\"Search\"> </p> </form>");
+            client.println("<script> $( \"#searchForm\" ).submit(function( event ) {   event.preventDefault();   var $form = $( this ),     term = $form.find( \"input[name='s']\" ).val(),     url = $form.attr( \"action\" );   var posting = $.post( url, { s: term } ); }); </script>");
             client.println("</body></html>");
             // The HTTP response ends with another blank line
             client.println();
