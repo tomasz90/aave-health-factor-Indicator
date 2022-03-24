@@ -5,13 +5,11 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
 #include <WiFiClient.h>
-#include <ArduinoJson.h>
 
 const char* ssid = "***REMOVED***";
 const char* password = "***REMOVED***";
 
 WiFiServer server(80);
-
 String header;
 
 #define AAVE_PIN 4
@@ -72,6 +70,9 @@ struct Settings {
 
 Settings settings;
 
+String avaxRpc = "https://api.avax.network/ext/bc/C/rpc";
+String avaxPayload = "{\"method\":\"eth_call\",\"params\":[{\"to\":\"0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c\",\"data\":\"0xbf92857c000000000000000000000000ADDRESS\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}";
+
 void setup() {
 
   Serial.begin(9600);
@@ -86,7 +87,7 @@ void setup() {
     Serial.print(".");
   }
 
-  getHf();
+  getHf(avaxRpc, avaxPayload, "6Cf0B3e6092A268b6C6e3DC681CEC61A7733A52e");
 
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
@@ -132,7 +133,7 @@ void loop() {
               String address = header.substring(firstIndex);
               int lastIndex = address.indexOf(" ");
               char tmpa[42];
-              address.substring(0, lastIndex).toCharArray(tmpa, 42);
+              address.substring(2, lastIndex).toCharArray(tmpa, 42);
               updateAddress(tmpa);
             }
 
@@ -192,21 +193,20 @@ void loop() {
   }
 }
 
-void getHf() {
-
+void getHf(String rpc, String payload, String address) {
     if(WiFi.status()== WL_CONNECTED){
-      String serverPath = "https://api.avax.network/ext/bc/C/rpc";
-       std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+      std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
       client->setInsecure();
-      // Your Domain name with URL path or IP address with path
+
       HTTPClient https;
-      https.begin(*client, serverPath);
+      https.begin(*client, rpc);
       
       https.addHeader("Content-Type", "application/json");
-      int httpResponseCode = https.POST("{\"method\":\"eth_call\",\"params\":[{\"to\":\"0x73e4898a1bfa9f710b6a6ab516403a6299e01fc6\",\"data\":\"0x02405343000000000000000000000000b6a86025f0fe1862b372cb0ca18ce3ede02a318f0000000000000000000000006cf0b3e6092a268b6c6e3dc681cec61a7733a52e\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}");
+      payload.replace("ADDRESS", address);
+      int httpResponseCode = https.POST(payload);
       
       if (httpResponseCode > 0) {
-        Serial.print("HTTP Response code: ");
+        Serial.print("HTTP Response code: " + httpResponseCode);
         Serial.println(httpResponseCode);
         String payload = https.getString();
         Serial.println(payload);
@@ -215,7 +215,6 @@ void getHf() {
         Serial.print("Error code: ");
         Serial.println(httpResponseCode);
       }
-      // Free resources
       https.end();
   }
 }
