@@ -50,6 +50,8 @@ uint32_t indicatorColor13 = indicator.Color(110, 150, 5);
 uint32_t indicatorColor14 = indicator.Color(100, 160, 10);
 uint32_t indicatorColor15 = indicator.Color(90, 170, 15);
 
+uint32_t indicatorColor-1 = indicator.Color(0, 0, 0);
+
 uint32_t indicator_colors[16] = {
   indicatorColor0, indicatorColor1, indicatorColor2, indicatorColor3,
   indicatorColor4, indicatorColor5, indicatorColor6, indicatorColor7,
@@ -71,7 +73,14 @@ struct Settings {
 Settings settings;
 
 String avaxRpc = "https://api.avax.network/ext/bc/C/rpc";
-String avaxPayload = "{\"method\":\"eth_call\",\"params\":[{\"to\":\"0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c\",\"data\":\"0xbf92857c000000000000000000000000ADDRESS\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}";
+String polygonRpc = "https://polygon-rpc.com/";
+String ethereumRpc = "https://mainnet.infura.io/v3/";
+String avaxPool = "0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c";
+String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
+String ethereumPool = "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9";
+
+unsigned long previousMillis = 0;
+const long interval = 3000;
 
 void setup() {
 
@@ -87,8 +96,6 @@ void setup() {
     Serial.print(".");
   }
 
-  getHf(avaxRpc, avaxPayload, "6Cf0B3e6092A268b6C6e3DC681CEC61A7733A52e");
-
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
@@ -97,7 +104,6 @@ void setup() {
 
   setupAaveColors();
   setupIndicatorColors();
-  indicatorDisplay(16);
 }
 
 void loop() {
@@ -191,31 +197,52 @@ void loop() {
     Serial.println("Client disconnected.");
     Serial.println("");
   }
+
+
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    float hf = getHf(avaxRpc, avaxPool, settings.address);
+    indicatorDisplay(hf);
+    Serial.println("HF IS : ");
+    Serial.println(hf);
+  }
 }
 
-void getHf(String rpc, String payload, String address) {
-    if(WiFi.status()== WL_CONNECTED){
-      std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-      client->setInsecure();
+float getHf(String rpc, String pool, String address) {
+  if (WiFi.status() == WL_CONNECTED) {
+    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+    client->setInsecure();
 
-      HTTPClient https;
-      https.begin(*client, rpc);
-      
-      https.addHeader("Content-Type", "application/json");
-      payload.replace("ADDRESS", address);
-      int httpResponseCode = https.POST(payload);
-      
-      if (httpResponseCode > 0) {
-        Serial.print("HTTP Response code: " + httpResponseCode);
-        Serial.println(httpResponseCode);
-        String payload = https.getString();
-        Serial.println(payload);
+    HTTPClient https;
+    https.begin(*client, rpc);
+
+    https.addHeader("Content-Type", "application/json");
+    String payload = "{\"method\":\"eth_call\",\"params\":[{\"to\":\"POOL\",\"data\":\"0xbf92857c000000000000000000000000ADDRESS\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}";
+    payload.replace("POOL", pool);
+    payload.replace("ADDRESS", address);
+    int httpResponseCode = https.POST(payload);
+    float result = 0.0;
+    int attempt = 0;
+
+    while (attempt < 5 && result == 0.0) {
+      if (httpResponseCode == 200) {
+        String response = https.getString();
+        String hexNumber = response.substring(response.length() - 20, response.length() - 2);
+
+        String truncated = hexNumber.substring(0, hexNumber.length() - 10); // truncated by 16^10
+        float f = 0.0000011;
+        result = strtoul(truncated.c_str(), 0, 16) * f;
       }
       else {
-        Serial.print("Error code: ");
+        Serial.println("Error code: ");
         Serial.println(httpResponseCode);
+        delay(10000);
       }
-      https.end();
+    }
+    https.end();
+    return result;
   }
 }
 
@@ -235,9 +262,16 @@ void updateAddress(char* address) {
   EEPROM.commit();
 }
 
-void indicatorDisplay(int pixels) {
-  for (int i = 0; i < pixels; i++) {
-    indicator.setPixelColor(i, indicator_colors[i]);
+void indicatorDisplay(float hf) {
+  int pixels = (hf - 1.5) / 0.1;
+  if (pixels > 0) {
+    for (int i = 0; i < INDICATOR_NUMPIXELS; i++) {
+      if(pixels >= i) {
+        indicator.setPixelColor(i, indicator_colors[i]);
+      } else {
+        indicator.setPixelColor(i, indicatorColor - 1);
+      }
+    }
   }
   indicator.show();
 }
