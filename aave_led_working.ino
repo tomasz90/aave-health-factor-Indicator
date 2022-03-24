@@ -31,6 +31,7 @@ bool setColor[7] = {false, false, false, false, false, false, false};
 
 #define INDICATOR_PIN 13
 #define INDICATOR_NUMPIXELS 16
+#define BUZZER_PIN 14
 
 Adafruit_NeoPixel indicator(INDICATOR_NUMPIXELS, INDICATOR_PIN, NEO_GRB + NEO_KHZ800);
 uint32_t indicatorColor0 = indicator.Color(240, 20, 15);
@@ -103,6 +104,7 @@ void setup() {
 
   setupAaveColors();
   setupIndicatorColors();
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void loop() {
@@ -196,7 +198,6 @@ void loop() {
     Serial.println("Client disconnected.");
     Serial.println("");
   }
-
 
   unsigned long currentMillis = millis();
 
@@ -294,10 +295,12 @@ void indicatorDisplay(float hf) {
         delay(200);
       }
     }
-  } else { // replace with xtask, add buzzer
+  } else {
     for (int i = 0; i < 10; i++) {
+      tone(BUZZER_PIN, 1000);
       setAllPixels(indicatorColor0);
       delay(300);
+      noTone(BUZZER_PIN);
       setAllPixels(indicatorColorX);
       delay(300);
     }
