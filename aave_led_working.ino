@@ -9,7 +9,7 @@ WiFiServer server(80);
 
 String header;
 String chain = "Avalanche";
-String address = "";
+String address = "Address...";
 
 #define AAVE_PIN 4
 #define AAVE_NUMPIXELS 7
@@ -113,6 +113,11 @@ void loop() {
               chain = "Polygon";
             } else if (header.indexOf("GET /Ethereum") >= 0) {
               chain = "Ethereum";
+            } else if (header.indexOf("GET /?address=") >= 0) {
+              int firstIndex = header.indexOf("=") + 1;
+              address = header.substring(firstIndex);
+              int lastIndex = address.indexOf(" ");
+              address = address.substring(0, lastIndex);
             }
             
             // Display the HTML web page
@@ -122,7 +127,7 @@ void loop() {
             // CSS to style the on/off buttons
             // Feel free to change the background-color and font-size attributes to fit your preferences
             client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            // drop down
+            // drop down styling
             client.println(".dropbtn {background-color: #04AA6D; min-width: 400px; color: white; padding: 16px; font-size: 20px; border: none; }");
             client.println(".dropdown { position: relative; display: inline-block; }");
             client.println(".dropdown-content { display: none; position: absolute; background-color: #f1f1f1; min-width: 400px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; }");
@@ -130,22 +135,24 @@ void loop() {
             client.println(".dropdown-content a:hover {background-color: #ddd;}");
             client.println(".dropdown:hover .dropdown-content {display: block;}");
             client.println(".dropdown:hover .dropbtn {background-color: #3e8e41;}");
-            // input text
+            // input text styling
             client.println("input[type=text] {   width: 400px;   padding: 12px 20px;   margin: 8px 0;   box-sizing: border-box;   border: 2px solid black;   border-radius: 4px; }");
-            // button
+            // button styling
             client.println(".button { background-color: #195B6A; width: 400px; border: none; color: white; padding: 16px 40px;");
             client.println("text-decoration: none; font-size: 22px; margin: 2px; cursor: pointer;}");
             client.println("</style></head>");
             
             // Web Page Heading
             client.println("<body><h1>AAVE indicator</h1>");
-            
+            // drop down menu
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + chain + "</button> <div class=\"dropdown-content\">");
             client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> <a href=\"Ethereum\">Ethereum</a> </div> </div>");
-
-            client.println("<form action=\"/\" id=\"searchForm\"> <input type=\"text\" name=\"s\" placeholder=\"Address...\">");
-            client.println("<p><input type=\"submit\" class=\"button\" value=\"Search\"> </p> </form>");
-            client.println("<script> $( \"#searchForm\" ).submit(function( event ) {   event.preventDefault();   var $form = $( this ),     term = $form.find( \"input[name='s']\" ).val(),     url = $form.attr( \"action\" );   var posting = $.post( url, { s: term } ); }); </script>");
+            // input and submit form
+            client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=" + address + ">");
+            client.println("<p><input type=\"submit\" class=\"button\" value=\"Submit\"> </p> </form>");
+            // script to enter address
+            client.println("<script> $(\"#addressForm\").submit(function(event) { event.preventDefault();");
+            client.println("var $form = $(this), term = $form.find(\"input[name='address']\").val(), url = $form.attr(\"action\"); var posting = $.post(url, {address: term}); }); </script>");
             client.println("</body></html>");
             // The HTTP response ends with another blank line
             client.println();
