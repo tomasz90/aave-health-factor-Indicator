@@ -4,7 +4,6 @@
 #include <EEPROM.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
-#include <WiFiClient.h>
 
 const char* ssid = "***REMOVED***";
 const char* password = "***REMOVED***";
@@ -84,7 +83,7 @@ void loop() {
               updateChain("Avalanche");
             } else if (header.indexOf("GET /Polygon") >= 0) {
               updateChain("Polygon");
-            } else if (header.indexOf("GET /?address=") >= 0) {
+            } else if (header.indexOf("GET /?address=") >= 0 && header.indexOf("0x") >= 0) {
               int firstIndex = header.indexOf("=") + 1;
               String address = header.substring(firstIndex);
               int lastIndex = address.indexOf(" ");

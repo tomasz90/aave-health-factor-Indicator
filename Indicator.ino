@@ -31,6 +31,7 @@ uint32_t indicator_colors[16] = {
 
 void setupIndicatorColors() {
   indicator.begin();
+  indicator.clear();
   indicator.setBrightness(15);
   pinMode(BUZZER_PIN, OUTPUT);
 }
