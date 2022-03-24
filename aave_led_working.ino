@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <Adafruit_NeoPixel.h>
 #include <bitset>
+#include <EEPROM.h>
 
 const char* ssid = "***REMOVED***";
 const char* password = "***REMOVED***";
@@ -8,8 +9,6 @@ const char* password = "***REMOVED***";
 WiFiServer server(80);
 
 String header;
-String chain = "Avalanche";
-String address = "Address...";
 
 #define AAVE_PIN 4
 #define AAVE_NUMPIXELS 7
@@ -62,9 +61,18 @@ struct Color {
   uint8 blue;
 };
 
+struct Settings {
+  char chain[10];
+  char address[42];
+};
+
+Settings settings;
+
 void setup() {
 
   Serial.begin(9600);
+  EEPROM.begin(sizeof(Settings));
+  EEPROM.get(0, settings);
 
   WiFi.begin(ssid, password);
   Serial.print("Connecting to ");
@@ -108,18 +116,20 @@ void loop() {
             client.println();
             // turns the GPIOs on and off
             if (header.indexOf("GET /Avalanche") >= 0) {
-              chain = "Avalanche";
+              updateChain("Avalanche");
             } else if (header.indexOf("GET /Polygon") >= 0) {
-              chain = "Polygon";
+              updateChain("Polygon");
             } else if (header.indexOf("GET /Ethereum") >= 0) {
-              chain = "Ethereum";
+              updateChain("Ethereum");
             } else if (header.indexOf("GET /?address=") >= 0) {
               int firstIndex = header.indexOf("=") + 1;
-              address = header.substring(firstIndex);
+              String address = header.substring(firstIndex);
               int lastIndex = address.indexOf(" ");
-              address = address.substring(0, lastIndex);
+              char tmpa[42];
+              address.substring(0, lastIndex).toCharArray(tmpa, 42);
+              updateAddress(tmpa);
             }
-            
+
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
@@ -141,14 +151,14 @@ void loop() {
             client.println(".button { background-color: #195B6A; width: 400px; border: none; color: white; padding: 16px 40px;");
             client.println("text-decoration: none; font-size: 22px; margin: 2px; cursor: pointer;}");
             client.println("</style></head>");
-            
+
             // Web Page Heading
             client.println("<body><h1>AAVE indicator</h1>");
             // drop down menu
-            client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + chain + "</button> <div class=\"dropdown-content\">");
+            client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + String(settings.chain) + "</button> <div class=\"dropdown-content\">");
             client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> <a href=\"Ethereum\">Ethereum</a> </div> </div>");
             // input and submit form
-            client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=" + address + ">");
+            client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=" + String(settings.address) + ">");
             client.println("<p><input type=\"submit\" class=\"button\" value=\"Submit\"> </p> </form>");
             // script to enter address
             client.println("<script> $(\"#addressForm\").submit(function(event) { event.preventDefault();");
@@ -174,6 +184,22 @@ void loop() {
     Serial.println("Client disconnected.");
     Serial.println("");
   }
+}
+
+void updateChain(char* chain) {
+  for (int i = 0; i < sizeof(settings.chain); i++) {
+    settings.chain[i] = chain[i];
+  }
+  EEPROM.put(0, settings);
+  EEPROM.commit();
+}
+
+void updateAddress(char* address) {
+  for (int i = 0; i < sizeof(settings.address); i++) {
+    settings.address[i] = address[i];
+  }
+  EEPROM.put(0, settings);
+  EEPROM.commit();
 }
 
 void indicatorDisplay(int pixels) {
