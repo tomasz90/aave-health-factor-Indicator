@@ -45,10 +45,14 @@ void indicatorDisplay(float hf) {
       firstBlack++;
     }
     Serial.println(pixels);
+    Serial.println(firstBlack);
     if (pixels >= 0) {
       if (firstBlack <= pixels) {
         if (pixels < 38) { // 38 -> hf = 5
-          for (int i = 0; i <= pixels || i < INDICATOR_NUMPIXELS; i++) {
+          if(pixels > INDICATOR_NUMPIXELS - 1) {
+            pixels = INDICATOR_NUMPIXELS - 1;
+          }
+          for (int i = 0; i <= pixels; i++) {
             indicator.setPixelColor(i, indicator_colors[i]);
             indicator.show();
             delay(200);
