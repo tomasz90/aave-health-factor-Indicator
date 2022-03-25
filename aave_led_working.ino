@@ -31,7 +31,7 @@ String avaxPool = "0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c";
 String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
 
 unsigned long previousMillis = 0;
-const long interval = 60000;
+const long interval = 30000;
 
 void setup() {
 
@@ -40,13 +40,7 @@ void setup() {
   EEPROM.get(0, settings);
 
   WiFi.begin(ssid, password);
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
+  connectToWifi();
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
@@ -151,13 +145,14 @@ void loop() {
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
+    connectToWifi(); // if disconnected
     float hf;
     if (strcmp(settings.chain, "Avalanche") == 0) {
       hf = getHf(avaxRpc, avaxPool, settings.address);
     } else if (strcmp(settings.chain, "Polygon") == 0) {
       hf = getHf(polygonRpc, polygonPool, settings.address);
     }
-    
+
     indicatorDisplay(hf);
     Serial.println(hf);
     Serial.println(settings.address);
@@ -215,4 +210,11 @@ void updateAddress(char* address) {
   }
   EEPROM.put(0, settings);
   EEPROM.commit();
+}
+
+void connectToWifi() {
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 }
