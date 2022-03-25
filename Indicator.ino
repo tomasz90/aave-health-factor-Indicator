@@ -37,38 +37,47 @@ void setupIndicatorColors() {
 }
 
 void indicatorDisplay(float hf) {
-  int pixels = (hf - 1.5) / 0.09;
-  int firstBlack = 0;
+  if (hf != 0.0) {
+    int pixels = (hf - 1.5) / 0.09;
+    int firstBlack = 0;
 
-  while (indicator.getPixelColor(firstBlack) != 0) {
-    firstBlack++;
-  }
-  Serial.println(pixels);
-  if (pixels >= 0) {
-    if (firstBlack <= pixels) {
-      if (pixels < 38) { // 38 -> hf = 5
-        for (int i = 0; i <= pixels || i < INDICATOR_NUMPIXELS; i++) {
-          indicator.setPixelColor(i, indicator_colors[i]);
+    while (indicator.getPixelColor(firstBlack) != 0) {
+      firstBlack++;
+    }
+    Serial.println(pixels);
+    if (pixels >= 0) {
+      if (firstBlack <= pixels) {
+        if (pixels < 38) { // 38 -> hf = 5
+          for (int i = 0; i <= pixels || i < INDICATOR_NUMPIXELS; i++) {
+            indicator.setPixelColor(i, indicator_colors[i]);
+            indicator.show();
+            delay(200);
+          }
+        } else {
+          setAllPixels(indicatorColor15);
+        }
+      } else if (firstBlack > pixels) {
+        for (int i = firstBlack; i > pixels; i--) {
+          indicator.setPixelColor(i, indicatorColorX);
           indicator.show();
           delay(200);
         }
-      } else {
-        setAllPixels(indicatorColor15);
       }
-    } else if (firstBlack > pixels) {
-      for (int i = firstBlack; i > pixels; i--) {
-        indicator.setPixelColor(i, indicatorColorX);
-        indicator.show();
-        delay(200);
+    } else {
+      for (int i = 0; i < 10; i++) {
+        tone(BUZZER_PIN, 1000);
+        setAllPixels(indicatorColorX);
+        delay(300);
+        noTone(BUZZER_PIN);
+        setAllPixels(indicatorColor0);
+        delay(300);
       }
     }
   } else {
     for (int i = 0; i < 10; i++) {
-      tone(BUZZER_PIN, 1000);
-      setAllPixels(indicatorColor0);
-      delay(300);
-      noTone(BUZZER_PIN);
       setAllPixels(indicatorColorX);
+      delay(300);
+      setAllPixels(indicatorColor7);
       delay(300);
     }
   }
