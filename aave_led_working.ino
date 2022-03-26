@@ -30,14 +30,19 @@ String polygonRpc = "https://polygon-rpc.com/";
 String avaxPool = "0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c";
 String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
 
-unsigned long previousMillis = 0;
+unsigned long previousMillis = -25000;
 const long interval = 30000;
+
+static float hf;
 
 void setup() {
 
   Serial.begin(9600);
   EEPROM.begin(sizeof(Settings));
   EEPROM.get(0, settings);
+
+  setupAaveColors();
+  setupIndicatorColors();
 
   WiFi.begin(ssid, password);
   connectToWifi();
@@ -46,9 +51,6 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   server.begin();
-
-  setupAaveColors();
-  setupIndicatorColors();
 }
 
 void loop() {
@@ -110,6 +112,7 @@ void loop() {
 
             // Web Page Heading
             client.println("<body><h1>AAVE indicator</h1>");
+            client.println("<h2>Health factor: " + String(hf) + "</h2>");
             // drop down menu
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + String(settings.chain) + "</button> <div class=\"dropdown-content\">");
             client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> </div> </div>");
@@ -146,7 +149,6 @@ void loop() {
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     connectToWifi(); // if disconnected
-    float hf;
     if (strcmp(settings.chain, "Avalanche") == 0) {
       hf = getHf(avaxRpc, avaxPool, settings.address);
     } else if (strcmp(settings.chain, "Polygon") == 0) {
@@ -167,7 +169,7 @@ float getHf(String rpc, String pool, String address) {
 
     HTTPClient https;
     https.begin(*client, rpc);
-
+    https.setTimeout(5000);
     https.addHeader("Content-Type", "application/json");
     String payload = "{\"method\":\"eth_call\",\"params\":[{\"to\":\"POOL\",\"data\":\"0xbf92857c000000000000000000000000ADDRESS\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}";
     payload.replace("POOL", pool);
@@ -182,7 +184,7 @@ float getHf(String rpc, String pool, String address) {
         String hexNumber = response.substring(response.length() - 20, response.length() - 2);
 
         String truncated = hexNumber.substring(0, hexNumber.length() - 10); // truncated by 16^10
-        float f = 0.0000011;
+        float f = 0.0000010995;
         result = strtoul(truncated.c_str(), 0, 16) * f;
       }
       else {
@@ -214,7 +216,10 @@ void updateAddress(char* address) {
 
 void connectToWifi() {
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    setBlue();
+    delay(250);
+    setBlank();
+    delay(250);
     Serial.print(".");
   }
 }

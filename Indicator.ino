@@ -109,3 +109,11 @@ void setAllPixels(int color) {
   }
   indicator.show();
 }
+
+void setBlue() {
+  setAllPixels(indicator.Color(40, 90, 150));
+}
+
+void setBlank() {
+  setAllPixels(indicatorColorX);
+}
