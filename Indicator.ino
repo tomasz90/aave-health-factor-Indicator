@@ -38,7 +38,7 @@ void setupIndicatorColors() {
 
 void indicatorDisplay(float hf) {
 
-  int pixels = (hf - 1.5) / 0.09;
+  int pixels = (hf - 1.4) / 0.1;
 
   if (hf == 0.0) {
     blinkOrange();
