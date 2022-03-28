@@ -174,11 +174,11 @@ float getHf(String rpc, String pool, String address) {
     String payload = "{\"method\":\"eth_call\",\"params\":[{\"to\":\"POOL\",\"data\":\"0xbf92857c000000000000000000000000ADDRESS\"},\"latest\"],\"id\":42,\"jsonrpc\":\"2.0\"}";
     payload.replace("POOL", pool);
     payload.replace("ADDRESS", address);
-    int httpResponseCode = https.POST(payload);
     float result = 0.0;
     int attempt = 0;
 
     while (attempt < 5 && result == 0.0) {
+      int httpResponseCode = https.POST(payload);
       if (httpResponseCode == 200) {
         String response = https.getString();
         String hexNumber = response.substring(response.length() - 20, response.length() - 2);
@@ -192,6 +192,7 @@ float getHf(String rpc, String pool, String address) {
         Serial.println(httpResponseCode);
         delay(10000);
       }
+      attempt++;
     }
     https.end();
     return result;
