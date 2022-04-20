@@ -18,7 +18,7 @@ struct Color {
 };
 
 struct Settings {
-  char chain[10];
+  char chain[15];
   char address[42];
 };
 
@@ -29,6 +29,9 @@ String polygonRpc = "https://polygon-rpc.com/";
 
 String avaxPool = "0x4f01aed16d97e3ab5ab2b501154dc9bb0f1a5a2c";
 String polygonPool = "0x8dFf5E27EA6b7AC08EbFdf9eB090F32ee9a30fcf";
+
+String avaxPoolV3 = "0x794a61358D6845594F94dc1DB02A252b5b4814aD";
+String polygonPoolV3 = "0x794a61358D6845594F94dc1DB02A252b5b4814aD";
 
 unsigned long previousMillis = -25000;
 const long interval = 30000;
@@ -75,10 +78,18 @@ void loop() {
             client.println("Connection: close");
             client.println();
             // turns the GPIOs on and off
-            if (header.indexOf("GET /Avalanche") >= 0) {
+            if (header.indexOf("GET /AvalancheV3") >= 0) {
+              updateChain("AvalancheV3");
+              updateHf();
+            } else if (header.indexOf("GET /PolygonV3") >= 0) {
+              updateChain("PolygonV3");
+              updateHf();
+            } else if (header.indexOf("GET /Avalanche") >= 0) {
               updateChain("Avalanche");
+              updateHf();
             } else if (header.indexOf("GET /Polygon") >= 0) {
               updateChain("Polygon");
+              updateHf();
             } else if (header.indexOf("GET /?address=") >= 0 && header.indexOf("0x") >= 0) {
               int firstIndex = header.indexOf("=") + 1;
               String address = header.substring(firstIndex);
@@ -86,6 +97,7 @@ void loop() {
               char tmpa[42];
               address.substring(2, lastIndex).toCharArray(tmpa, 42);
               updateAddress(tmpa);
+              updateHf();
             }
 
             // Display the HTML web page
@@ -112,10 +124,11 @@ void loop() {
 
             // Web Page Heading
             client.println("<body><h1>AAVE indicator</h1>");
-            client.println("<h2>Health factor: " + String(hf) + "</h2>");
+            String healthFactor = (hf < 4722) ? String(hf) : "&infin;";
+            client.println("<h2>Health factor: " + healthFactor + "</h2>");
             // drop down menu
             client.println("<div class=\"dropdown\"> <button class=\"dropbtn\">" + String(settings.chain) + "</button> <div class=\"dropdown-content\">");
-            client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> </div> </div>");
+            client.println("<a href=\"Avalanche\">Avalanche</a> <a href=\"Polygon\">Polygon</a> <a href=\"AvalancheV3\">AvalancheV3</a> <a href=\"PolygonV3\">PolygonV3</a></div> </div>");
             // input and submit form
             client.println("<form action=\"/\" id=\"addressForm\"> <input type=\"text\" name=\"address\" placeholder=0x" + String(settings.address) + ">");
             client.println("<p><input type=\"submit\" class=\"button\" value=\"Submit\"> </p> </form>");
@@ -145,21 +158,28 @@ void loop() {
   }
 
   unsigned long currentMillis = millis();
-
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-    connectToWifi(); // if disconnected
-    if (strcmp(settings.chain, "Avalanche") == 0) {
-      hf = getHf(avaxRpc, avaxPool, settings.address);
-    } else if (strcmp(settings.chain, "Polygon") == 0) {
-      hf = getHf(polygonRpc, polygonPool, settings.address);
-    }
-
-    indicatorDisplay(hf);
-    Serial.println(hf);
-    Serial.println(settings.address);
-    Serial.println(settings.chain);
+    updateHf();
   }
+}
+
+void updateHf() {
+  connectToWifi(); // if disconnected
+  if (strcmp(settings.chain, "AvalancheV3") == 0) {
+    hf = getHf(avaxRpc, avaxPoolV3, settings.address);
+  } else if (strcmp(settings.chain, "PolygonV3") == 0) {
+    hf = getHf(polygonRpc, polygonPoolV3, settings.address);
+  } else if (strcmp(settings.chain, "Avalanche") == 0) {
+    hf = getHf(avaxRpc, avaxPool, settings.address);
+  } else if (strcmp(settings.chain, "Polygon") == 0) {
+    hf = getHf(polygonRpc, polygonPool, settings.address);
+  }
+
+  indicatorDisplay(hf);
+  Serial.println(hf);
+  Serial.println(settings.address);
+  Serial.println(settings.chain);
 }
 
 float getHf(String rpc, String pool, String address) {
