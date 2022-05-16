@@ -17,3 +17,6 @@ If you want to build this project you need:
 Pins needed to connect peripherals(leds, buzzer) are written in code - you can change them if you preffer, doesnt matter.
 After programming controller, connect to access point created by ESP8266, configure your SSID and password.
 
+
+![IMG_20220516_033127](https://user-images.githubusercontent.com/49351206/168518558-dfd8e9a5-55ce-43d1-bdf6-e57125e12950.jpg)
+![IMG_20220516_033134](https://user-images.githubusercontent.com/49351206/168518570-74c8da92-ec00-4ae7-bf22-1a4ea571079b.jpg)
