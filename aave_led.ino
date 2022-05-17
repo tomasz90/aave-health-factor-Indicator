@@ -46,11 +46,11 @@ void setup() {
 
   setupAaveColors();
   setupIndicatorColors();
-  
+
   manager.setConnectTimeout(10);
   manager.setConfigPortalTimeout(120);
   manager.autoConnect("ESP_AAVE", "password");
-  
+
   connectToWifi();
   server.begin();
 }
@@ -86,12 +86,18 @@ void updateHf() {
 }
 
 void connectToWifi() {
+  int _try = 0;
+  long lastTry = millis();
+  long _delay = 10000;
   while (WiFi.status() != WL_CONNECTED) {
-    WiFi.reconnect();
-    setBlue();
-    delay(250);
-    setBlank();
-    delay(250);
-    Serial.print(".");
+    if (millis() - lastTry > _delay) {
+      WiFi.reconnect();
+      lastTry = millis();
+      _try++;
+    }
+    if(_try > 10) {
+      ESP.restart();
+    }
+    blinkBlue();
   }
 }

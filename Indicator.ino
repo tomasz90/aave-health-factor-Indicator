@@ -103,6 +103,13 @@ void blinkRed() {
   }
 }
 
+void blinkBlue() {
+  setBlue();
+  delay(250);
+  setBlank();
+  delay(250);
+}
+
 void setAllPixels(int color) {
   for (int i = 0; i < INDICATOR_NUMPIXELS; i++) {
     indicator.setPixelColor(i, color);
